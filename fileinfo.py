@@ -14,14 +14,7 @@ import numpy as np
 
 
 class SampleFile:
-#    sha256=''
-#    filename=''
-#    dct_freq_count={}
-#    psi_count=0
-#    urls=[]
-#    Class=''
-#    feature_vector=[]
-    
+
     def __init__(self,filename):
         self.filename=filename
         self.calculate_sha256()
@@ -86,13 +79,8 @@ class SampleFile:
         return 'sha256: %s \nFileName: %s\nClass: %s' % (self.sha256, self.filename, self.Class)
 
 class FileList:
-#    dct_fileinfo={}
-#    dirname = ''
     alldir_list = []
-#    global_list=[]
-#    filtered_global_list=[]
-#    feature_list=[]
-        
+
     def __init__(self,dirname=''):
         self.dct_fileinfo = {}
         self.feature_list = []
@@ -119,6 +107,7 @@ class FileList:
         return newdir
          
     def extract_strings_from_files(self,path):
+        import os
         files=os.listdir(path)
         for file in files:
             f = SampleFile(os.path.join(path,file))
@@ -144,7 +133,7 @@ class FileList:
         self.global_list = sorted(self.global_list, key=itemgetter(1), reverse=True)
     
     def filter_global_list_len(self,minlen):
-        self.filtered_global_list=list(filter(lambda x:len(x[0])>=minlen, dir1.global_list))
+        self.filtered_global_list=list(filter(lambda x:len(x[0])>=minlen, self.global_list))
         
     def create_feature_list(self,threshold,strlen):
         if self.filtered_global_list == []:
