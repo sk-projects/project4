@@ -150,7 +150,7 @@ class FileList:
         
     def find_urls(self):
         lst=[]
-        for x in dir1.global_list:
+        for x in self.global_list:
             lst.append(x[0])
         #strlst = list(map(bytes.decode,lst))
         import re
