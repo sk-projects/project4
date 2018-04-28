@@ -1,4 +1,5 @@
 
+
 import pandas
 from pandas.plotting import scatter_matrix
 import matplotlib.pyplot as plt
@@ -14,17 +15,23 @@ from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.naive_bayes import GaussianNB
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.svm import SVC
+from sklearn.ensemble import RandomForestClassifier
 
-def crossvalidate_models(models, X_train, Y_train):
+import json
+
+def cv_models(models, X_train, Y_train):
     # evaluate each model in turn
     seed = 7
     scoring = 'accuracy'
     results = []
+    results_dict = {}
     for name, model in models:
         kfold = model_selection.KFold(n_splits=10, random_state=seed)
         cv_results = model_selection.cross_val_score(model, X_train, Y_train, cv=kfold, scoring=scoring, n_jobs=-1)
-        results.append((name,cv_results.mean()*100))
-    return results
+        mean_accuracy = round(100 * cv_results.mean(), 2)
+        results.append((name, mean_accuracy))
+        results_dict[name] = mean_accuracy
+    return results_dict
 
 
 def test_model(model, X_train, Y_train, X_test, Y_test):
@@ -37,46 +44,74 @@ def test_model(model, X_train, Y_train, X_test, Y_test):
     # print(predictions)
     # print(Y_test)
     # print(X_test)
-    result = accuracy_score(Y_test, predictions)*100
+    result = round(accuracy_score(Y_test, predictions)*100, 2)
     return result
 
+
 def read_dataset(url):
-    numTopFeatures = 200
-    numFeatures = 200
     attrnames = []
+    numFeatures = len(open(url, 'r').readline().split(','))
     for i in range(0, numFeatures - 1, 1):
         attrnames.append('String_' + str(i))
     attrnames.append('class')
     dataset = pandas.read_csv(url, names=attrnames)
     print(dataset.shape)
+    return dataset
+
+
+def select_features(dataset, features_select):
+    features_total = dataset.shape[1]
     array = dataset.values
-    X = array[:, 0:numTopFeatures - 1]
-    Y = array[:, numFeatures - 1]
-    print(X)
-    print(Y)
-    return (X,Y)
+    X = array[:, 0:features_select - 1]
+    Y = array[:, features_total - 1]
+    return (X, Y)
+
 
 if __name__ == "__main__":
+#    url = 'globalfeaturevector.txt'
+    url = 'mixed.txt'
+    dataset = read_dataset(url)
 
 
-    url = 'globalfeaturevector.txt'
-    X,Y = read_dataset(url)
-
-    url = 'fv20180417-1.txt'
-    X_test,Y_test = read_dataset(url)
+    # validation_size=0.10
+    # seed = 3
+    # X_train, X_test, Y_train, Y_test = model_selection.train_test_split(X, Y, test_size=validation_size, random_state=seed)
+    # X_train = X
+    # Y_train = Y
 
     # Build Models
     models = []
     models.append(('LR', LogisticRegression()))
     # models.append(('LDA', LinearDiscriminantAnalysis()))
     models.append(('KNN', KNeighborsClassifier()))
-#    models.append(('DT', DecisionTreeClassifier()))
-#    models.append(('NB', GaussianNB()))
-#    models.append(('MNB', MultinomialNB()))
-#    models.append(('SVM', SVC()))
-#    results = crossvalidate_models(models, X, Y)
-#    print(results)
+    models.append(('DT', DecisionTreeClassifier()))
+    models.append(('NB', GaussianNB()))
+    models.append(('MNB', MultinomialNB()))
+    models.append(('SVM', SVC()))
+    models.append(('RF', RandomForestClassifier(n_estimators=100)))
 
-    model = DecisionTreeClassifier()
-    result = test_model(model, X, Y, X_test, Y_test)
-    print("accuracy = ", result)
+    cvresults={}
+    index = 0
+    model_names = ['LR', 'KNN', 'DT', 'SVM', 'NB', 'MNB', 'RF']
+    cvresults['graph_Xaxis'] = []
+    for name in model_names:
+        cvresults[name] = []
+    for features in range(0,1000,50):
+        X_train, Y_train = select_features(dataset, features)
+        results = cv_models(models, X_train, Y_train)
+        print(results)
+        cvresults['graph_Xaxis'].append(features)
+        for name in model_names:
+            cvresults[name].append(results[name])
+        index += 1
+
+    ft = open("cvgraph.json", "w")
+    ft.write(json.dumps(cvresults))
+    ft.close()
+
+#	 url = 'fv20180417-1.txt'
+#    X_test,Y_test = read_dataset(url)
+
+#    model = DecisionTreeClassifier()
+#    result = test_model(model, X, Y, X_test, Y_test)
+#    print("accuracy = ", result)

@@ -11,7 +11,7 @@ Class SampleFile and Class FileList
 import hashlib
 import subprocess
 import numpy as np
-
+import os
 
 class SampleFile:
 
@@ -30,7 +30,7 @@ class SampleFile:
         self.sha256 = hasher.hexdigest()
         
     def extract_strings(self):
-        result=subprocess.run(['strings',self.filename],stdout=subprocess.PIPE)
+        result=subprocess.run(['strings', self.filename],stdout=subprocess.PIPE)
         psi=result.stdout.splitlines()
 #        open(self.filename + '.txt','w').write('\n'.join(map(bytes.decode,psi)))
         self.psi_count=len(psi)
@@ -86,6 +86,8 @@ class FileList:
         self.feature_list = []
         self.filtered_global_list = []
         self.feature_vector = []
+        self.global_list = []
+        self.name = dirname
         if dirname != '':            
             self.dirnames = [dirname]
             if dirname not in self.alldir_list:
@@ -93,8 +95,10 @@ class FileList:
             self.extract_strings_from_files(dirname)            
 
     def __str__(self):
-        #total_files = 
-        return 'Dir Name: %s \nTotal Files: %d' % (self.dirnames, len(self.dct_fileinfo.keys()))
+        total_files=0
+        for dirname in self.dirnames:
+            total_files += len(os.listdir(dirname))
+        return 'Dir Name: %s \nTotal Files: %d \n listfile = %d' % (self.dirnames, len(self.dct_fileinfo.keys()), total_files)
     
     def __add__(self, other):
         dirnames = self.dirnames + other.dirnames
@@ -108,12 +112,17 @@ class FileList:
          
     def extract_strings_from_files(self,path):
         import os
-        files=os.listdir(path)
+        files = os.listdir(path)
+        print("Total files in directory = ", len(files))
+        counter = 0
         for file in files:
             f = SampleFile(os.path.join(path,file))
             if f.sha256 not in self.dct_fileinfo.keys():
                 f.extract_strings()
-                self.dct_fileinfo[f.sha256]=f  
+                self.dct_fileinfo[f.sha256] = f
+                counter += 1
+                if counter % 500 == 0:
+                    print("Processed %d files" % (counter))
 
     def generate_global_list(self):
         from operator import itemgetter
@@ -131,7 +140,7 @@ class FileList:
         for stringkey in dct_global_list.keys():
             self.global_list.append((stringkey, dct_global_list[stringkey]))
         self.global_list = sorted(self.global_list, key=itemgetter(1), reverse=True)
-    
+
     def filter_global_list_len(self,minlen):
         self.filtered_global_list=list(filter(lambda x:len(x[0])>=minlen, self.global_list))
         
