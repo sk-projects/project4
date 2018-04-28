@@ -3,13 +3,15 @@
 """
 Created on Sat Apr 14 16:55:41 2018
 
-@author: cloud
+@author: sk cloud
+
+Class SampleFile and Class FileList
 """
 
 import hashlib
 import subprocess
 import numpy as np
-import os
+
 
 class SampleFile:
 #    sha256=''
