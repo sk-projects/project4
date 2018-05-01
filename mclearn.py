@@ -44,6 +44,7 @@ def save_cv_results(dataset, models, start_feature, end_feature, step_feature, o
     for name in model_names:
         cvresults[name] = []
     for features in range(start_feature,end_feature,step_feature):
+        print("No. of features = ", features)
         X_train, Y_train = select_features(dataset, features)
         results = cv_models(models, X_train, Y_train)
         print(results)
@@ -90,7 +91,7 @@ def select_features(dataset, features_select):
     features_total = dataset.shape[1]
     assert (features_total >= features_select), 'Not enough features to select'
     array = dataset.values
-    X = array[:, 0:features_select - 1]
+    X = array[:, 0:features_select]
     Y = array[:, features_total - 1]
     return (X, Y)
 
@@ -98,14 +99,16 @@ def split_dataset_features(dataset, features_select):
     features_total = dataset.shape[1]
     assert (features_total >= features_select), 'Not enough features to select'
     array = dataset.values
-    X = array[:, 0:features_select - 1]
+    X = array[:, 0:features_select]
     Y = array[:, features_total - 1]
     return (X, Y)
 
 
 if __name__ == "__main__":
 #    url = 'globalfeaturevector.txt'
-    url = 'mixed.txt'
+#     url = 'mixed.txt'
+
+    url = 'dataset1_feature_vector.csv'
     dataset = read_dataset(url)
 
     # validation_size=0.10
@@ -126,7 +129,7 @@ if __name__ == "__main__":
     models.append(('RF', RandomForestClassifier(n_estimators=100)))
 
     print("Running machine learning models on the dataset")
-    save_cv_results(dataset, models, 0, 1000, 50, "cvgraph.json")
+    save_cv_results(dataset, models, 50, 1000, 50, "dataset1_cv_results.json")
 
     skip = 1
     if skip == 0:

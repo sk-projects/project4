@@ -6,15 +6,27 @@ from fileinfo import FileList
 import pickle
 import os.path
 
-dataset1_dir = "/home/cloud/Documents/dataset_paper/dataset2"
+dataset1_dir = "/home/xena/Documents/dataset_paper/dataset2"
 
 benign_dir = os.path.join(dataset1_dir, "benign")
 print(benign_dir)
-fl_benign_dir = FileList(benign_dir)
+fl_benign_dir_win7 = FileList(benign_dir)
+print(fl_benign_dir_win7)
+fl_benign_dir_win7.setClass('Benign')
+
+benign_dir_win10 = os.path.join(dataset1_dir, "benign_win10")
+print(benign_dir_win10)
+fl_benign_dir_win10 = FileList(benign_dir_win10)
+print(fl_benign_dir_win10)
+fl_benign_dir_win10.setClass('Benign')
+
+fl_benign_dir = fl_benign_dir_win7 +  fl_benign_dir_win10
 print(fl_benign_dir)
-fl_benign_dir.setClass('Benign')
 with open('benign_dataset2.pkl', 'wb') as output:
     pickle.dump(fl_benign_dir, output, pickle.HIGHEST_PROTOCOL)
+
+del fl_benign_dir_win7
+del fl_benign_dir_win10
 
 trojan_dir = os.path.join(dataset1_dir, "malware", "trojan")
 print(trojan_dir)
@@ -39,8 +51,12 @@ with open('malware_dataset2.pkl', 'wb') as output:
     pickle.dump(fl_malware_dir, output, pickle.HIGHEST_PROTOCOL)
 print(fl_malware_dir)
 
+del fl_trojan_dir
+del fl_worm_dir
+del fl_virus_dir
+
 dataset1 = fl_benign_dir + fl_malware_dir
 dataset1.generate_global_list()
 dataset1.generate_feature_vector(1000, 5)
-dataset1.save_feature_vector('dataset1_feature_vector.csv')
+dataset1.save_feature_vector('dataset2_feature_vector.csv')
 
