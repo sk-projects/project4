@@ -19,6 +19,7 @@ from sklearn.ensemble import RandomForestClassifier
 
 import json
 
+
 def cv_models(models, X_train, Y_train):
     # evaluate each model in turn
     seed = 7
@@ -33,8 +34,9 @@ def cv_models(models, X_train, Y_train):
         results_dict[name] = mean_accuracy
     return results_dict
 
+
 def save_cv_results(dataset, models, start_feature, end_feature, step_feature, output_filename):
-    cvresults={}
+    cvresults = {}
     index = 0
     model_names = []
     for model in models:
@@ -72,6 +74,38 @@ def test_model(model, X_train, Y_train, X_test, Y_test):
     return result
 
 
+def test_models(models, X_train, Y_train, X_test, Y_test):
+    results_dict = {}
+    for name, model in models:
+        test_result = test_model(model, X_train, Y_train, X_test, Y_test)
+        results_dict[name] = test_result
+    return results_dict
+
+
+def save_test_results(train_dataset, test_dataset, models, start_feature, end_feature, step_feature, output_filename):
+    test_results={}
+    index = 0
+    model_names = []
+    for model in models:
+        model_names.append(model[0])
+    test_results['graph_Xaxis'] = []
+    for name in model_names:
+        test_results[name] = []
+    for features in range(start_feature,end_feature,step_feature):
+        print("No. of features = ", features)
+        X_train, Y_train = select_features(train_dataset, features)
+        X_test, Y_test = select_features(test_dataset, features)
+        results = test_models(models, X_train, Y_train, X_test, Y_test)
+        print(results)
+        test_results['graph_Xaxis'].append(features)
+        for name in model_names:
+            test_results[name].append(results[name])
+        index += 1
+    ft = open(output_filename, "w")
+    ft.write(json.dumps(test_results))
+    ft.close()
+
+
 def read_dataset(url):
     try:
         numFeatures = len(open(url, 'r').readline().split(','))
@@ -94,6 +128,7 @@ def select_features(dataset, features_select):
     X = array[:, 0:features_select]
     Y = array[:, features_total - 1]
     return (X, Y)
+
 
 def split_dataset_features(dataset, features_select):
     features_total = dataset.shape[1]
@@ -128,8 +163,13 @@ if __name__ == "__main__":
     models.append(('SVM', SVC()))
     models.append(('RF', RandomForestClassifier(n_estimators=100)))
 
-    print("Running machine learning models on the dataset")
-    save_cv_results(dataset, models, 50, 1000, 50, "dataset1_cv_results.json")
+    # print("Running machine learning models on the dataset")
+    # save_cv_results(dataset, models, 50, 1000, 50, "dataset1_cv_results.json")
+
+    print("Testing performance on unseen dataset")
+    url = 'test_dataset_feature_vector.csv'
+    test_dataset = read_dataset(url)
+    save_test_results(dataset, test_dataset, models, 50, 1000, 50, "dataset1_test_results.json")
 
     skip = 1
     if skip == 0:
