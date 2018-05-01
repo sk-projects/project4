@@ -10,6 +10,8 @@ Class SampleFile and Class FileList
 
 import hashlib
 import subprocess
+from typing import Dict, Any
+
 import numpy as np
 import os
 
@@ -18,6 +20,8 @@ class SampleFile:
     def __init__(self,filename):
         self.filename=filename
         self.calculate_sha256()
+        self.psi_count = 0
+        self.dct_freq_count = {}
     
     def calculate_sha256(self):
         BLOCKSIZE = 65536
@@ -33,7 +37,7 @@ class SampleFile:
         result=subprocess.run(['strings', self.filename],stdout=subprocess.PIPE)
         psi=result.stdout.splitlines()
 #        open(self.filename + '.txt','w').write('\n'.join(map(bytes.decode,psi)))
-        self.psi_count=len(psi)
+        self.psi_count = len(psi)
         psistr=list(map(bytes.decode,psi))
         self.psi_freq_count(psistr)
     
@@ -79,6 +83,7 @@ class SampleFile:
         return 'sha256: %s \nFileName: %s\nClass: %s' % (self.sha256, self.filename, self.Class)
 
 class FileList:
+
     alldir_list = []
 
     def __init__(self,dirname=''):
@@ -87,6 +92,8 @@ class FileList:
         self.filtered_global_list = []
         self.feature_vector = []
         self.global_list = []
+        self.total_strings = 0
+        self.unique_strings = 0
         self.name = dirname
         if dirname != '':            
             self.dirnames = [dirname]
@@ -148,7 +155,16 @@ class FileList:
         if self.filtered_global_list == []:
             self.filter_global_list_len(strlen)
         self.feature_list=[x[0] for x in self.filtered_global_list[0:threshold]]
-        
+
+    def save_feature_list(self, threshold, strlen, filename):
+        if self.feature_list == []:
+            self.create_feature_list(threshold, strlen)
+        open(filename,"w").write(str(self.feature_list))
+
+    def read_feature_list_file(self, filename):
+        import ast
+        self.feature_list = ast.literal_eval(open(filename,'r').read())
+
     def find_urls(self):
         lst=[]
         for x in self.global_list:
@@ -197,7 +213,21 @@ class FileList:
     def show_file_list(self):
         for file in self.dct_fileinfo.values():
             print(file.filename)
-    
+
+    def calculate_total_strings(self):
+        total_strings = 0
+        for file in self.dct_fileinfo.values():
+            total_strings += file.psi_count
+        self.total_strings = total_strings
+
+    def calculate_unique_strings(self):
+        self.unique_strings = len(self.global_list)
+
+    def print_average_strings_per_file(self):
+        print("Total Strings = ", self.total_strings)
+        print("Total Files = ", len(self.dct_fileinfo))
+        print("Average number of strings per file = ", self.total_strings / len(self.dct_fileinfo))
+
 if __name__ == "__main__":
     print("fileinfo.py is being run directly")
     import os
