@@ -6,14 +6,14 @@ from fileinfo import FileList
 import pickle
 import os.path
 
-dataset1_dir = "/home/cloud/Documents/dataset_paper/dataset1"
+dataset1_dir = "/home/cloud/Documents/dataset_paper/dataset2"
 
 benign_dir = os.path.join(dataset1_dir, "benign")
 print(benign_dir)
 fl_benign_dir = FileList(benign_dir)
 print(fl_benign_dir)
 fl_benign_dir.setClass('Benign')
-with open('benign_dataset1.pkl', 'wb') as output:
+with open('benign_dataset2.pkl', 'wb') as output:
     pickle.dump(fl_benign_dir, output, pickle.HIGHEST_PROTOCOL)
 
 trojan_dir = os.path.join(dataset1_dir, "malware", "trojan")
@@ -35,7 +35,7 @@ print(fl_virus_dir)
 fl_virus_dir.setClass('Malware')
 
 fl_malware_dir = fl_trojan_dir + fl_worm_dir + fl_virus_dir
-with open('malware_dataset1.pkl', 'wb') as output:
+with open('malware_dataset2.pkl', 'wb') as output:
     pickle.dump(fl_malware_dir, output, pickle.HIGHEST_PROTOCOL)
 print(fl_malware_dir)
 

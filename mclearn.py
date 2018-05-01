@@ -76,6 +76,7 @@ def read_dataset(url):
         numFeatures = len(open(url, 'r').readline().split(','))
     except FileNotFoundError as e:
         print("Exception type : ", type(e).__name__)
+        exit()
     else:
         attrnames = []
         for i in range(0, numFeatures - 1, 1):
@@ -84,8 +85,6 @@ def read_dataset(url):
         dataset = pandas.read_csv(url, names=attrnames)
         print(dataset.shape)
         return dataset
-    finally:
-        return -1
 
 def select_features(dataset, features_select):
     features_total = dataset.shape[1]
@@ -108,9 +107,6 @@ if __name__ == "__main__":
 #    url = 'globalfeaturevector.txt'
     url = 'mixed.txt'
     dataset = read_dataset(url)
-    if dataset == -1:
-        print('Cannot read dataset')
-        exit()
 
     # validation_size=0.10
     # seed = 3
@@ -129,12 +125,15 @@ if __name__ == "__main__":
     models.append(('SVM', SVC()))
     models.append(('RF', RandomForestClassifier(n_estimators=100)))
 
+    print("Running machine learning models on the dataset")
     save_cv_results(dataset, models, 0, 1000, 50, "cvgraph.json")
 
-    X_train, Y_train = select_features(dataset, 200)
-    url = 'fv20180417-1.txt'
-    test_dataset = read_dataset(url)
-    X_test, Y_test = select_features(test_dataset, 200)
-    model = DecisionTreeClassifier()
-    result = test_model(model, X_train, Y_train, X_test, Y_test)
-    print("accuracy = ", result)
+    skip = 1
+    if skip == 0:
+        X_train, Y_train = select_features(dataset, 200)
+        url = 'fv20180417-1.txt'
+        test_dataset = read_dataset(url)
+        X_test, Y_test = select_features(test_dataset, 200)
+        model = DecisionTreeClassifier()
+        result = test_model(model, X_train, Y_train, X_test, Y_test)
+        print("accuracy = ", result)
