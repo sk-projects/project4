@@ -5,6 +5,7 @@ Script to generate feature vector for dataset1
 from fileinfo import FileList
 import pickle
 import os.path
+import os
 from mclearn import *
 
 dataset1_dir = "/home/cloud/Documents/dataset_paper/dataset1"

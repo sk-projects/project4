@@ -70,15 +70,22 @@ def test_model(model, X_train, Y_train, X_test, Y_test):
     # print(predictions)
     # print(Y_test)
     # print(X_test)
-    result = round(accuracy_score(Y_test, predictions)*100, 2)
-    return result
+    tn, fp, fn, tp = confusion_matrix(Y_test, predictions).ravel()
+    tpr = tp / (tp + fn)
+    tnr = tn / (tn + fp)
+    fpr = fp / (fp + tn)
+    fnr = fn / (tp + fn)
+    acc = (tp + tn) / (tp + fp + fn + tn)
+    accuracy = round(accuracy_score(Y_test, predictions)*100, 2)
+    results = (tpr, tnr, fpr, fnr, acc)
+    return accuracy, results
 
 
 def test_models(models, X_train, Y_train, X_test, Y_test):
     results_dict = {}
     for name, model in models:
-        test_result = test_model(model, X_train, Y_train, X_test, Y_test)
-        results_dict[name] = test_result
+        accuracy, test_result = test_model(model, X_train, Y_train, X_test, Y_test)
+        results_dict[name] = (accuracy, test_result)
     return results_dict
 
 
@@ -99,7 +106,31 @@ def save_test_results(train_dataset, test_dataset, models, start_feature, end_fe
         print(results)
         test_results['graph_Xaxis'].append(features)
         for name in model_names:
-            test_results[name].append(results[name])
+            test_results[name].append(results[name][0])
+        index += 1
+    ft = open(output_filename, "w")
+    ft.write(json.dumps(test_results))
+    ft.close()
+
+
+def save_test_cm_results(train_dataset, test_dataset, models, start_feature, end_feature, step_feature, output_filename):
+    test_results = {}
+    index = 0
+    model_names = []
+    for model in models:
+        model_names.append(model[0])
+    test_results['graph_Xaxis'] = []
+    for name in model_names:
+        test_results[name] = []
+    for features in range(start_feature, end_feature, step_feature):
+        print("No. of features = ", features)
+        X_train, Y_train = select_features(train_dataset, features)
+        X_test, Y_test = select_features(test_dataset, features)
+        results = test_models(models, X_train, Y_train, X_test, Y_test)
+        print(results)
+        test_results['graph_Xaxis'].append(features)
+        for name in model_names:
+            test_results[name].append(results[name][1])
         index += 1
     ft = open(output_filename, "w")
     ft.write(json.dumps(test_results))
@@ -120,6 +151,7 @@ def read_dataset(url):
         dataset = pandas.read_csv(url, names=attrnames)
         print(dataset.shape)
         return dataset
+
 
 def select_features(dataset, features_select):
     features_total = dataset.shape[1]
@@ -167,6 +199,7 @@ def plot_graph(varGraphTitle, varXLabel, varYLabel, varCVresults_file, varOutfil
     #plt.show()
     plt.clf()
 
+
 def initialize_models():
     models = []
     models.append(('LR', LogisticRegression()))
@@ -178,6 +211,8 @@ def initialize_models():
     models.append(('SVM', SVC()))
     models.append(('RF', RandomForestClassifier(n_estimators=100)))
     return models
+
+
 
 if __name__ == "__main__":
 #    url = 'globalfeaturevector.txt'
