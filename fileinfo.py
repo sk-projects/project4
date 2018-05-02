@@ -164,21 +164,6 @@ class FileList:
     def read_feature_list_file(self, filename):
         import ast
         self.feature_list = ast.literal_eval(open(filename,'r').read())
-
-    def find_urls(self):
-        lst=[]
-        for x in self.global_list:
-            lst.append(x[0])
-        #strlst = list(map(bytes.decode,lst))
-        import re
-        regex=re.compile("^.*http:.*")
-        result=[m.group(0) for l in lst for m in [regex.search(l)] if m]
-        return result
-#        print(result)
-    
-    def setClass(self,Class):
-        for file in self.dct_fileinfo.values():
-            file.Class = Class
     
     def generate_feature_vector(self,threshold,strlen):
         if self.feature_list == []:
@@ -209,7 +194,23 @@ class FileList:
         for file in self.dct_fileinfo.values():
             fninfo = file.filename + '\n' #+ str(file.dct_freq_count) + '\n'
             open(file_info,"a+").write(fninfo)
-    
+
+    def find_urls(self):
+        lst = []
+        for x in self.global_list:
+            lst.append(x[0])
+        # strlst = list(map(bytes.decode,lst))
+        import re
+        regex = re.compile("^.*http:.*")
+        result = [m.group(0) for l in lst for m in [regex.search(l)] if m]
+        return result
+
+    #        print(result)
+
+    def set_Class(self, Class):
+        for file in self.dct_fileinfo.values():
+            file.Class = Class
+
     def show_file_list(self):
         for file in self.dct_fileinfo.values():
             print(file.filename)
@@ -228,6 +229,7 @@ class FileList:
         print("Total Files = ", len(self.dct_fileinfo))
         print("Average number of strings per file = ", self.total_strings / len(self.dct_fileinfo))
 
+
 if __name__ == "__main__":
     print("fileinfo.py is being run directly")
     import os
@@ -238,7 +240,7 @@ if __name__ == "__main__":
     path = '/media/cloud/aceshub1/dt/repo/benign/ds01b'
     
     dir1 = FileList(path)
-    dir1.setClass('Benign')
+    dir1.set_Class('Benign')
     dir1.generate_global_list()
 #    dir1.find_urls()
     dir1.generate_feature_vector(1000,5)
@@ -248,7 +250,7 @@ if __name__ == "__main__":
     path = join(join(os.getcwd(),'win10exe'),'system2')
     path = '/media/cloud/aceshub1/dt/repo/malware/ds01m'
     dir2 = FileList(path)
-    dir2.setClass('Malware')
+    dir2.set_Class('Malware')
     dir2.generate_global_list()
 #    dir1.find_urls()
     dir2.generate_feature_vector(1000,5)

@@ -138,12 +138,42 @@ def split_dataset_features(dataset, features_select):
     Y = array[:, features_total - 1]
     return (X, Y)
 
+def plot_graph(varGraphTitle, varXLabel, varYLabel, varCVresults_file, varOutfile):
+    import ast
+    dctCVresults = ast.literal_eval(open(varCVresults_file,'r').read())
+    graph_Xaxis = dctCVresults['graph_Xaxis']
+    print("Plot Cross Validation Graph")
+    plt.plot(graph_Xaxis, dctCVresults['DT'], color='green')
+    plt.plot(graph_Xaxis, dctCVresults['KNN'], color='orange')
+    plt.plot(graph_Xaxis, dctCVresults['LR'], color='yellow')
+    plt.plot(graph_Xaxis, dctCVresults['NB'], color='blue')
+    plt.plot(graph_Xaxis, dctCVresults['MNB'], color='navy')
+    plt.plot(graph_Xaxis, dctCVresults['SVM'], color='red')
+    plt.plot(graph_Xaxis, dctCVresults['RF'], color='saddlebrown')
+    plt.xlabel(varXLabel)
+    plt.ylabel(varYLabel)
+    plt.title(varGraphTitle)
+#	plt.figtext(.50, .10, "DT is green\nKNN is orange\nLR is yellow\nNB is blue\nSVM is red\n")
+    red_patch = mpatches.Patch(color='red', label='SVM')
+    green_patch = mpatches.Patch(color='green', label='Decision Tree')
+    blue_patch = mpatches.Patch(color='blue', label='Naive Bayes')
+    navy_patch = mpatches.Patch(color='navy', label='Multinomial Naive Bayes')
+    yellow_patch = mpatches.Patch(color='yellow', label='Logistic Regression')
+    orange_patch = mpatches.Patch(color='orange', label='KNN')
+    sbrown_patch = mpatches.Patch(color='saddlebrown', label='RF')
+    plt.legend(handles=[green_patch, orange_patch, yellow_patch, blue_patch, red_patch, navy_patch, sbrown_patch])
+    plt.grid(True)
+    plt.savefig(varOutfile)
+    #plt.show()
+    plt.clf()
+
+
 
 if __name__ == "__main__":
 #    url = 'globalfeaturevector.txt'
 #     url = 'mixed.txt'
 
-    url = 'dataset1_feature_vector.csv'
+    url = 'dataset2_feature_vector.csv'
     dataset = read_dataset(url)
 
     # validation_size=0.10
@@ -164,12 +194,14 @@ if __name__ == "__main__":
     models.append(('RF', RandomForestClassifier(n_estimators=100)))
 
     # print("Running machine learning models on the dataset")
-    # save_cv_results(dataset, models, 50, 1000, 50, "dataset1_cv_results.json")
+    save_cv_results(dataset, models, 50, 1000, 50, "dataset2_cv_results.json")
+    plot_graph('Cross Validation Results for Dataset2', 'Number of Features', 'Accuracy', 'dataset2_cv_results.json','dataset2_cv_graph.png')
 
-    print("Testing performance on unseen dataset")
-    url = 'test_dataset_feature_vector.csv'
-    test_dataset = read_dataset(url)
-    save_test_results(dataset, test_dataset, models, 50, 1000, 50, "dataset1_test_results.json")
+    # print("Testing performance on unseen dataset")
+    # url = 'test_dataset_feature_vector.csv'
+    # test_dataset = read_dataset(url)
+    # save_test_results(dataset, test_dataset, models, 50, 1000, 50, "dataset1_test_results.json")
+
 
     skip = 1
     if skip == 0:
