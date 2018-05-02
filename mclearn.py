@@ -167,7 +167,17 @@ def plot_graph(varGraphTitle, varXLabel, varYLabel, varCVresults_file, varOutfil
     #plt.show()
     plt.clf()
 
-
+def initialize_models():
+    models = []
+    models.append(('LR', LogisticRegression()))
+    # models.append(('LDA', LinearDiscriminantAnalysis()))
+    models.append(('KNN', KNeighborsClassifier()))
+    models.append(('DT', DecisionTreeClassifier()))
+    models.append(('NB', GaussianNB()))
+    models.append(('MNB', MultinomialNB()))
+    models.append(('SVM', SVC()))
+    models.append(('RF', RandomForestClassifier(n_estimators=100)))
+    return models
 
 if __name__ == "__main__":
 #    url = 'globalfeaturevector.txt'
