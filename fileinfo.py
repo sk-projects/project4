@@ -10,7 +10,7 @@ Class SampleFile and Class FileList
 
 import hashlib
 import subprocess
-from typing import Dict, Any
+from typing import Dict, Any, List
 
 import numpy as np
 import os
@@ -99,13 +99,14 @@ class FileList:
             self.dirnames = [dirname]
             if dirname not in self.alldir_list:
                 self.alldir_list.append(dirname)
-            self.extract_strings_from_files(dirname)            
+            self.extract_strings_from_files(dirname)
+            self.total_files=0
+            for dirname in self.dirnames:
+                self.total_files += len(os.listdir(dirname))
+
 
     def __str__(self):
-        total_files=0
-        for dirname in self.dirnames:
-            total_files += len(os.listdir(dirname))
-        return 'Dir Name: %s \nTotal Files: %d \n listfile = %d' % (self.dirnames, len(self.dct_fileinfo.keys()), total_files)
+        return 'Dir Name: %s \nTotal Files: %d \n listfile = %d' % (self.dirnames, len(self.dct_fileinfo.keys()), self.total_files)
     
     def __add__(self, other):
         dirnames = self.dirnames + other.dirnames
@@ -115,8 +116,10 @@ class FileList:
         newdir = FileList()
         newdir.dct_fileinfo = dct_fileinfo
         newdir.dirnames = dirnames
+        newdir.total_files = self.total_files + other.total_files
+        newdir.total_strings = self.total_strings + other.total_strings
         return newdir
-         
+
     def extract_strings_from_files(self,path):
         import os
         files = os.listdir(path)
@@ -229,6 +232,14 @@ class FileList:
         print("Total Files = ", len(self.dct_fileinfo))
         print("Average number of strings per file = ", self.total_strings / len(self.dct_fileinfo))
 
+    def save_global_list(self, outFile):
+        content = ''
+        for item in self.global_list:
+            if content == '':
+                content = str(item)
+            else:
+                content = content + '\n' + str(item)
+        open(outFile,'w').write(content)
 
 if __name__ == "__main__":
     print("fileinfo.py is being run directly")

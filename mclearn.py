@@ -22,7 +22,7 @@ import json
 
 def cv_models(models, X_train, Y_train):
     # evaluate each model in turn
-    seed = 7
+    seed = 3
     scoring = 'accuracy'
     results = []
     results_dict = {}
@@ -153,12 +153,20 @@ def read_dataset(url):
         return dataset
 
 
-def select_features(dataset, features_select):
+def select_features(dataset, features_select, validation_size = None):
     features_total = dataset.shape[1]
     assert (features_total >= features_select), 'Not enough features to select'
     array = dataset.values
     X = array[:, 0:features_select]
     Y = array[:, features_total - 1]
+
+    if validation_size != None and validation_size > 0 and validation_size < 1:
+        # validation_size = 0.10
+        seed = 3
+        X_train, X_test, Y_train, Y_test = model_selection.train_test_split(X, Y, test_size=validation_size,
+                                                                            random_state=seed)
+        X = X_train
+        Y = Y_train
     return (X, Y)
 
 
