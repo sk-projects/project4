@@ -18,7 +18,7 @@ import os
 class SampleFile:
 
     def __init__(self,filename):
-        self.filename=filename
+        self.filename = filename
         self.calculate_sha256()
         self.psi_count = 0
         self.dct_freq_count = {}
@@ -61,8 +61,11 @@ class SampleFile:
 #        print(self.urls)
         
     def set_Class(self,Class):
-        self.Class=Class
- 
+        self.Class = Class
+
+    def set_category(self, category):
+        self.category = category
+
     def create_feature_vector(self,feature_list):
         file_strings = self.dct_freq_count.keys()
         self.feature_vector=[]
@@ -78,7 +81,8 @@ class SampleFile:
             print("Feature vector Empty")
         else:
             open(file_featurevector,"w").write(self.feature_vector)
-            
+
+
     def __str__(self):
         return 'sha256: %s \nFileName: %s\nClass: %s' % (self.sha256, self.filename, self.Class)
 
@@ -94,6 +98,7 @@ class FileList:
         self.global_list = []
         self.total_strings = 0
         self.unique_strings = 0
+        self.Class = []
         self.name = dirname
         if dirname != '':            
             self.dirnames = [dirname]
@@ -103,11 +108,12 @@ class FileList:
             self.total_files=0
             for dirname in self.dirnames:
                 self.total_files += len(os.listdir(dirname))
+            self.calculate_total_strings()
 
 
     def __str__(self):
         return 'Dir Name: %s \nTotal Files: %d \n listfile = %d' % (self.dirnames, len(self.dct_fileinfo.keys()), self.total_files)
-    
+
     def __add__(self, other):
         dirnames = self.dirnames + other.dirnames
         dct_fileinfo={}
@@ -118,6 +124,7 @@ class FileList:
         newdir.dirnames = dirnames
         newdir.total_files = self.total_files + other.total_files
         newdir.total_strings = self.total_strings + other.total_strings
+        newdir.Class = self.Class + other.Class
         return newdir
 
     def extract_strings_from_files(self,path):
@@ -151,13 +158,16 @@ class FileList:
             self.global_list.append((stringkey, dct_global_list[stringkey]))
         self.global_list = sorted(self.global_list, key=itemgetter(1), reverse=True)
 
-    def filter_global_list_len(self,minlen):
-        self.filtered_global_list=list(filter(lambda x:len(x[0])>=minlen, self.global_list))
-        
-    def create_feature_list(self,threshold,strlen):
+    def filter_global_list_len(self, minlen):
+        self.filtered_global_list=list(filter(lambda x: len(x[0]) >= minlen, self.global_list))
+
+    def filter_global_list_occ(self, occurance):
+        self.filtered_global_list = list(filter(lambda x: x[1] >= occurance, self.global_list))
+
+    def create_feature_list(self, threshold, strlen):
         if self.filtered_global_list == []:
             self.filter_global_list_len(strlen)
-        self.feature_list=[x[0] for x in self.filtered_global_list[0:threshold]]
+        self.feature_list = [x[0] for x in self.filtered_global_list[0:threshold]]
 
     def save_feature_list(self, threshold, strlen, filename):
         if self.feature_list == []:
@@ -168,13 +178,13 @@ class FileList:
         import ast
         self.feature_list = ast.literal_eval(open(filename,'r').read())
     
-    def generate_feature_vector(self,threshold,strlen):
+    def generate_feature_vector(self, threshold, strlen):
         if self.feature_list == []:
-            self.create_feature_list(threshold,strlen)
+            self.create_feature_list(threshold, strlen)
         for file in self.dct_fileinfo.values():
             file.create_feature_vector(self.feature_list)
             
-    def save_feature_vector(self,file_featurevector):
+    def save_feature_vector(self, file_featurevector):
         all_feature_vectors=''
         files = list(self.dct_fileinfo.values())
         for file in files:
@@ -189,7 +199,7 @@ class FileList:
         self.feature_vector = all_feature_vectors
 
     def save_global_list(self,file_globallist):
-        open(file_globallist,"w").write('\n'.join(list(map(str,self.global_list))))
+        open(file_globallist, "w").write('\n'.join(list(map(str,self.global_list))))
         
     def save_fileinfo(self,file_info):
         import os
@@ -213,6 +223,12 @@ class FileList:
     def set_Class(self, Class):
         for file in self.dct_fileinfo.values():
             file.Class = Class
+        self.Class = [Class]
+
+
+    def set_category(self, category=''):
+        for file in self.dct_fileinfo.values():
+            file.category = category
 
     def show_file_list(self):
         for file in self.dct_fileinfo.values():
@@ -239,7 +255,8 @@ class FileList:
                 content = str(item)
             else:
                 content = content + '\n' + str(item)
-        open(outFile,'w').write(content)
+        open(outFile, 'w').write(content)
+
 
 if __name__ == "__main__":
     print("fileinfo.py is being run directly")
@@ -254,7 +271,7 @@ if __name__ == "__main__":
     dir1.set_Class('Benign')
     dir1.generate_global_list()
 #    dir1.find_urls()
-    dir1.generate_feature_vector(1000,5)
+    dir1.generate_feature_vector(1000, 5)
     dir1.save_feature_vector("fv20180417-1.txt")
     
     #path=r'C:\Users\Rose\Desktop\win10exe\system2'
