@@ -25,8 +25,8 @@ print(fl_benign_dir)
 with open('benign_dataset2.pkl', 'wb') as output:
     pickle.dump(fl_benign_dir, output, pickle.HIGHEST_PROTOCOL)
 
-del fl_benign_dir_win7
-del fl_benign_dir_win10
+#del fl_benign_dir_win7
+#del fl_benign_dir_win10
 
 trojan_dir = os.path.join(dataset2_dir, "malware", "trojan")
 print(trojan_dir)
@@ -51,9 +51,9 @@ with open('malware_dataset2.pkl', 'wb') as output:
     pickle.dump(fl_malware_dir, output, pickle.HIGHEST_PROTOCOL)
 print(fl_malware_dir)
 
-del fl_trojan_dir
-del fl_worm_dir
-del fl_virus_dir
+#del fl_trojan_dir
+#del fl_worm_dir
+#del fl_virus_dir
 
 with open(r'benign_dataset2.pkl', 'rb') as inputfile:
     fl_benign_dir = pickle.load(inputfile)

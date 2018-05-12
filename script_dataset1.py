@@ -24,6 +24,7 @@ if not os.path.exists(objfile_benign):
     fl_benign_dir = FileList(benign_dir)
     print(fl_benign_dir)
     fl_benign_dir.set_Class('Benign')
+    fl_benign_dir.set_category('none')
     with open(objfile_benign, 'wb') as output:
         pickle.dump(fl_benign_dir, output, pickle.HIGHEST_PROTOCOL)
 else:
@@ -37,18 +38,21 @@ if not os.path.exists(objfile_malware):
     fl_trojan_dir = FileList(trojan_dir)
     print(fl_trojan_dir)
     fl_trojan_dir.set_Class('Malware')
+    fl_trojan_dir.set_category('trojan')
 
     worm_dir = os.path.join(dataset1_dir, "malware", "worm")
     print(worm_dir)
     fl_worm_dir = FileList(worm_dir)
     print(fl_worm_dir)
     fl_worm_dir.set_Class('Malware')
+    fl_worm_dir.set_category('worm')
 
     virus_dir = os.path.join(dataset1_dir, "malware", "virus")
     print(virus_dir)
     fl_virus_dir = FileList(virus_dir)
     print(fl_virus_dir)
     fl_virus_dir.set_Class('Malware')
+    fl_virus_dir.set_category('virus')
 
     fl_malware_dir = fl_trojan_dir + fl_worm_dir + fl_virus_dir
     with open(objfile_malware, 'wb') as output:
@@ -62,6 +66,7 @@ else:
 
 dataset1 = fl_benign_dir + fl_malware_dir
 dataset1.generate_global_list()
+dataset1.calculate_unique_strings()
 dataset1.generate_feature_vector(1000, 4)
 dataset1.save_feature_list(1000, 4, file_fl_dataset1)
 

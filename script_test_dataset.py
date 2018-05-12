@@ -8,7 +8,7 @@ import os
 
 # directories
 src_test_directory = "/home/cloud/Documents/dataset_paper/test_dataset"
-result_test_directory = os.path.join(os.getcwd(), 'test_dataset1_results')
+result_test_directory = os.path.join(os.getcwd(), 'test_dataset1_results_cm')
 
 #ds1_results_path = os.path.join(os.getcwd(),"dataset1_test_results")
 csv_test_dataset1_fv = os.path.join(result_test_directory, 'test_dataset1_feature_vector.csv')
@@ -93,7 +93,8 @@ test_dataset = read_dataset(csv_test_dataset1_fv)
 
 print("Testing performance on unseen data")
 models = initialize_models()
-save_test_results(train_dataset, test_dataset, models, 50, 1001, 50, json_dataset1_test_results)
+#save_test_results(train_dataset, test_dataset, models, 50, 1001, 50, json_dataset1_test_results)
+save_test_cm_results(train_dataset, test_dataset, models, 50, 1001, 50, json_dataset1_test_results)
 plot_graph('Test Results for Unseen Dataset', 'Number of Features', 'Accuracy', json_dataset1_test_results, png_dataset1_test_results)
 
 from FormatResult import *
