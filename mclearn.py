@@ -203,6 +203,7 @@ def plot_graph(varGraphTitle, varXLabel, varYLabel, varCVresults_file, varOutfil
     sbrown_patch = mpatches.Patch(color='saddlebrown', label='RF')
     plt.legend(handles=[green_patch, orange_patch, yellow_patch, blue_patch, red_patch, navy_patch, sbrown_patch])
     plt.grid(True)
+    plt.axis([0, 1000, 0, 100])
     plt.savefig(varOutfile)
     #plt.show()
     plt.clf()
