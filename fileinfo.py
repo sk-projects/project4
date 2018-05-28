@@ -25,6 +25,8 @@ class SampleFile:
         self.dct_freq_count = {}
         self.urls = []
         self.dlls = []
+        self.other_files = []
+
     
     def calculate_sha256(self):
         BLOCKSIZE = 65536
@@ -45,6 +47,7 @@ class SampleFile:
         self.psi_freq_count(psistr)
         self.find_urls()
         self.find_dll_files()
+        self.find_other_files()
     
     def psi_freq_count(self,psi):
         self.dct_freq_count={}
@@ -74,17 +77,14 @@ class SampleFile:
                     print(self.urls)
 
 
- #       print(self.urls)
-
     def print_urls(self):
         print(self.urls)
 
     def find_dll_files(self):
         self.dlls = []
         strlst = list(self.dct_freq_count.keys())
-
         import re
-        pattern = re.compile(r'[a-zA-Z0-9]+\.dll')
+        pattern = re.compile(r'[a-zA-Z0-9-]+\.dll')
         for string in strlst:
             if len(string) > 1000 or len(string) < 5:
                 continue
@@ -96,6 +96,23 @@ class SampleFile:
 
     def print_dlls(self):
         print(self.dlls)
+
+    def find_other_files(self):
+        self.other_files = []
+        strlst = list(self.dct_freq_count.keys())
+        import re
+        pattern = re.compile('[^\/:#&<>?|~%]+\.(exe|vbs|msi|jpg|pdf)$', re.IGNORECASE)
+        for string in strlst:
+            if len(string) > 1000 or len(string) < 2:
+                continue
+          #  print(string)
+            for match in pattern.findall(string):
+                if(len(match) > 2):
+                    self.other_files.append(match)
+
+
+    def print_other_files(self):
+        print(self.other_files)
 
 
     def set_Class(self,Class):
@@ -296,6 +313,11 @@ class FileList:
         for file in list(self.dct_fileinfo.values()):
             print(file.filename)
             file.print_dlls()
+
+    def print_other_files(self):
+        for file in list(self.dct_fileinfo.values()):
+            print(file.filename)
+            file.other_files()
 
 
 if __name__ == "__main__":
