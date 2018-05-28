@@ -15,6 +15,7 @@ from typing import Dict, Any, List
 import numpy as np
 import os
 
+
 class SampleFile:
 
     def __init__(self,filename):
@@ -22,6 +23,8 @@ class SampleFile:
         self.calculate_sha256()
         self.psi_count = 0
         self.dct_freq_count = {}
+        self.urls = []
+        self.dlls = []
     
     def calculate_sha256(self):
         BLOCKSIZE = 65536
@@ -40,6 +43,8 @@ class SampleFile:
         self.psi_count = len(psi)
         psistr=list(map(bytes.decode,psi))
         self.psi_freq_count(psistr)
+        self.find_urls()
+        self.find_dll_files()
     
     def psi_freq_count(self,psi):
         self.dct_freq_count={}
@@ -51,15 +56,48 @@ class SampleFile:
 #        open(self.filename + '.txt1','w').write(str(self.dct_freq_count))
 
     def find_urls(self):
-        lst=[]
-        for string in self.dct_freq_count.keys():
-            lst.append(string)
-        strlst = list(map(bytes.decode,lst))
+        self.urls=[]
+        #for string in self.dct_freq_count.keys():
+        #    lst.append(string)
+        strlst = list(self.dct_freq_count.keys())
+        #strlst = list(map(bytes.decode,lst))
         import re
-        regex=re.compile("^.*http:.*")
-        self.urls=[m.group(0) for l in strlst for m in [regex.search(l)] if m]
-#        print(self.urls)
-        
+        pattern = re.compile(r'(?:(?:http|HTTP|https|HTTPS|ftp|FTP|smtp|SMTP|irc|IRC)?:\/\/)?[\w-]{2,}\.[\w-]{2,}\.[\w-]{2,6}[\/\w.-]*\??[\w.=\-]*')
+        for string in strlst:
+            if len(string) > 1000 or len(string) < 5:
+                continue
+           # print(string)
+            matches = pattern.findall(string)
+            for match in matches:
+                if(len(match) > 2):
+                    self.urls.append(match)
+                    print(self.urls)
+
+
+ #       print(self.urls)
+
+    def print_urls(self):
+        print(self.urls)
+
+    def find_dll_files(self):
+        self.dlls = []
+        strlst = list(self.dct_freq_count.keys())
+
+        import re
+        pattern = re.compile(r'[a-zA-Z0-9]+\.dll')
+        for string in strlst:
+            if len(string) > 1000 or len(string) < 5:
+                continue
+          #  print(string)
+            for match in pattern.findall(string):
+                if(len(match) > 2):
+                    self.dlls.append(match)
+        #print(self.dlls)
+
+    def print_dlls(self):
+        print(self.dlls)
+
+
     def set_Class(self,Class):
         self.Class = Class
 
@@ -75,16 +113,16 @@ class SampleFile:
             else:
                 self.feature_vector.append(0)
         self.feature_vector.append(self.Class)
-    
+
     def save_feature_vector(self,file_featurevector):
         if self.feature_vector == []:
             print("Feature vector Empty")
         else:
             open(file_featurevector,"w").write(self.feature_vector)
 
-
     def __str__(self):
         return 'sha256: %s \nFileName: %s\nClass: %s' % (self.sha256, self.filename, self.Class)
+
 
 class FileList:
 
@@ -134,11 +172,13 @@ class FileList:
         counter = 0
         for file in files:
             f = SampleFile(os.path.join(path,file))
+            print("processing file %s " % (f.filename))
             if f.sha256 not in self.dct_fileinfo.keys():
                 f.extract_strings()
                 self.dct_fileinfo[f.sha256] = f
                 counter += 1
-                if counter % 500 == 0:
+                print("processed %s " % (f.filename))
+                if counter % 200 == 0:
                     print("Processed %d files" % (counter))
 
     def generate_global_list(self):
@@ -208,17 +248,7 @@ class FileList:
             fninfo = file.filename + '\n' #+ str(file.dct_freq_count) + '\n'
             open(file_info,"a+").write(fninfo)
 
-    def find_urls(self):
-        lst = []
-        for x in self.global_list:
-            lst.append(x[0])
-        # strlst = list(map(bytes.decode,lst))
-        import re
-        regex = re.compile("^.*http:.*")
-        result = [m.group(0) for l in lst for m in [regex.search(l)] if m]
-        return result
 
-    #        print(result)
 
     def set_Class(self, Class):
         for file in self.dct_fileinfo.values():
@@ -256,6 +286,16 @@ class FileList:
             else:
                 content = content + '\n' + str(item)
         open(outFile, 'w').write(content)
+
+    def print_urls(self):
+        for file in list(self.dct_fileinfo.values()):
+            print(file.filename)
+            file.print_urls()
+
+    def print_dlls(self):
+        for file in list(self.dct_fileinfo.values()):
+            print(file.filename)
+            file.print_dlls()
 
 
 if __name__ == "__main__":
