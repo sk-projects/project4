@@ -25,7 +25,7 @@ class SampleFile:
         self.dct_freq_count = {}
         self.urls = []
         self.dlls = []
-        self.other_files = []
+        self.other_files = {}
 
     
     def calculate_sha256(self):
@@ -74,7 +74,7 @@ class SampleFile:
             for match in matches:
                 if(len(match) > 2):
                     self.urls.append(match)
-                    print(self.urls)
+                   # print(self.urls)
 
 
     def print_urls(self):
@@ -98,17 +98,20 @@ class SampleFile:
         print(self.dlls)
 
     def find_other_files(self):
-        self.other_files = []
+        self.other_files = {}
         strlst = list(self.dct_freq_count.keys())
         import re
-        pattern = re.compile('[^\/:#&<>?|~%]+\.(exe|vbs|msi|jpg|pdf)$', re.IGNORECASE)
+        pattern = re.compile('([^:#&<>?|~%]+\.(exe|vbs|msi|jpg|pdf))$', re.IGNORECASE)
         for string in strlst:
             if len(string) > 1000 or len(string) < 2:
                 continue
-          #  print(string)
             for match in pattern.findall(string):
-                if(len(match) > 2):
-                    self.other_files.append(match)
+                try:
+                    self.other_files[str(match[1]).lower()].append(match[0])
+                except KeyError:
+                    self.other_files[str(match[1]).lower()] = [match[0]]
+
+            print(self.other_files)
 
 
     def print_other_files(self):
@@ -317,7 +320,7 @@ class FileList:
     def print_other_files(self):
         for file in list(self.dct_fileinfo.values()):
             print(file.filename)
-            file.other_files()
+            file.print_other_files()
 
 
 if __name__ == "__main__":
