@@ -26,6 +26,7 @@ class SampleFile:
         self.urls = []
         self.dlls = []
         self.other_files = {}
+        self.func_names = []
 
     
     def calculate_sha256(self):
@@ -59,7 +60,8 @@ class SampleFile:
 #        open(self.filename + '.txt1','w').write(str(self.dct_freq_count))
 
     def find_urls(self):
-        self.urls=[]
+        if self.urls != []:
+            self.urls = []
         #for string in self.dct_freq_count.keys():
         #    lst.append(string)
         strlst = list(self.dct_freq_count.keys())
@@ -81,7 +83,8 @@ class SampleFile:
         print(self.urls)
 
     def find_dll_files(self):
-        self.dlls = []
+        if self.dlls != []:
+            self.dlls = []
         strlst = list(self.dct_freq_count.keys())
         import re
         pattern = re.compile(r'[a-zA-Z0-9-]+\.dll')
@@ -111,14 +114,41 @@ class SampleFile:
                 except KeyError:
                     self.other_files[str(match[1]).lower()] = [match[0]]
 
-            print(self.other_files)
+            #print(self.other_files)
 
 
     def print_other_files(self):
         print(self.other_files)
 
 
-    def set_Class(self,Class):
+    def find_api_calls(self):
+        self.func_names = []
+        strlst = list(self.dct_freq_count.keys())
+        import re
+        pattern = re.compile(r'^([A-Z]([a-z]+[A-Z]*){,6}(32|64)?)')
+        for string in strlst:
+            if(len(string) > 100):
+                continue
+            matches = pattern.fullmatch(string)
+            if matches:
+                #        print(matches[0])
+                self.func_names.append(matches[0])
+
+        garb = []
+        pat1 = re.compile(r'[A-Z]([a-zA-Z])\1+')
+        for string in self.func_names:
+            matches = pat1.fullmatch(string)
+            if matches:
+                garb.append(matches[0])
+
+        sfunc = []
+        for x in self.func_names:
+            if len(x) < 6:
+                sfunc.append(x)
+        print(self.func_names)
+
+
+def set_Class(self,Class):
         self.Class = Class
 
     def set_category(self, category):
@@ -158,6 +188,7 @@ class FileList:
         self.unique_strings = 0
         self.Class = []
         self.name = dirname
+        self.dll_global_freq_count = {}
         if dirname != '':            
             self.dirnames = [dirname]
             if dirname not in self.alldir_list:
@@ -314,6 +345,7 @@ class FileList:
 
     def print_dlls(self):
         for file in list(self.dct_fileinfo.values()):
+
             print(file.filename)
             file.print_dlls()
 
@@ -321,6 +353,49 @@ class FileList:
         for file in list(self.dct_fileinfo.values()):
             print(file.filename)
             file.print_other_files()
+
+
+    def generate_feature_vector_from_dlls(self, fil_dll_feature_vector):
+        from operator import itemgetter
+        files = list(self.dct_fileinfo.values())
+        self.dll_global_freq_count = {}
+        dll_global_list = []
+        for file in files:
+            dlls = list(map(lambda x: x.lower(),file.dlls))
+            dll_global_list = dll_global_list + dlls
+        from collections import Counter
+        self.dll_global_freq_count = dict(Counter(dll_global_list))
+        print(self.dll_global_freq_count)
+
+        global_list = []
+        for stringkey in self.dll_global_freq_count.keys():
+            global_list.append((stringkey, self.dll_global_freq_count[stringkey]))
+        revlst = sorted(global_list, key=itemgetter(1), reverse=True)
+        print(revlst)
+        dll_feature_list = [x[0] for x in revlst]
+        dll_names = list(self.dll_global_freq_count.keys())
+        self.dll_feature_vector = []
+
+        for file in files:
+            file_feature_vector=[]
+            for feature in dll_feature_list:
+                if feature in file.dlls:
+                    file_feature_vector.append(file.dlls.count(feature))
+                else:
+                    file_feature_vector.append(0)
+            file_feature_vector.append(file.Class)
+            self.dll_feature_vector.append(file_feature_vector)
+
+        content = ''
+        for item in self.dll_feature_vector:
+            if content == '':
+                content = ','.join(list(map(str,item)))
+            else:
+                content = content + '\n' + ','.join(list(map(str,item)))
+        print(content)
+        print('Total Files = %d' % (len(self.dll_feature_vector)))
+        open(fil_dll_feature_vector,'w').write(content)
+
 
 
 if __name__ == "__main__":
