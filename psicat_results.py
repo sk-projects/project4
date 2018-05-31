@@ -53,8 +53,10 @@ fil_cat_fl = os.path.join(dir_results, 'fl_results_350.json')
 dct_cat_fl = ast.literal_eval(open(fil_cat_fl, 'r').read())
 if not os.path.exists(os.path.join(dir_results, '350')):
     os.mkdir(os.path.join(dir_results, '350'))
-fl_dataset.feature_list = dct_cat_fl['350'][0]
-fl_dataset.generate_feature_vector(len(dct_cat_fl['350'][0]), 4)
+
+
+fl_dataset.feature_list = dct_cat_fl[350][0]
+fl_dataset.generate_feature_vector(len(dct_cat_fl[350][0]), 4)
 fil_fv = os.path.join(dir_results, '350', 'fv_350_func.csv')
 fl_dataset.save_feature_vector(fil_fv)
 
