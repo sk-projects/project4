@@ -104,7 +104,7 @@ class SampleFile:
         self.other_files = {}
         strlst = list(self.dct_freq_count.keys())
         import re
-        pattern = re.compile('([^:#&<>?|~%]+\.(exe|vbs|msi|jpg|pdf))$', re.IGNORECASE)
+        pattern = re.compile('([^:#&<>?|~%]+\.(exe|vbs|msi|jpg|pdf|cfg))$', re.IGNORECASE)
         for string in strlst:
             if len(string) > 1000 or len(string) < 2:
                 continue
@@ -148,7 +148,7 @@ class SampleFile:
         print(self.func_names)
 
 
-def set_Class(self,Class):
+    def set_Class(self, Class):
         self.Class = Class
 
     def set_category(self, category):
@@ -331,11 +331,16 @@ class FileList:
 
     def save_global_list(self, outFile):
         content = ''
-        for item in self.global_list:
-            if content == '':
-                content = str(item)
-            else:
-                content = content + '\n' + str(item)
+        
+# =============================================================================
+#         for item in self.global_list:
+#             if content == '':
+#                 content = str(item)
+#             else:
+#                 content = content + '\n' + str(item)
+#                 
+# =============================================================================
+        content = '\n'.join(list(map(str,self.global_list)))
         open(outFile, 'w').write(content)
 
     def print_urls(self):
