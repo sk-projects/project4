@@ -54,30 +54,35 @@ dct_cat_fl = ast.literal_eval(open(fil_cat_fl, 'r').read())
 if not os.path.exists(os.path.join(dir_results, '350')):
     os.mkdir(os.path.join(dir_results, '350'))
 
-numfeatures = len(dct_cat_fl[350][0])
-fl_dataset.feature_list = dct_cat_fl[350][0]
-fl_dataset.generate_feature_vector(numfeatures, 4)
-fil_fv = os.path.join(dir_results, '350', 'fv_350_func.csv')
-fl_dataset.save_feature_vector(fil_fv)
+psicatnames = ['func', 'dlls', 'urls', 'files', 'message', 'symbolic']
+for i in range(0, len(psicatnames)):
+    psitype = psicatnames[i]
+    numfeatures = len(dct_cat_fl[350][i])
+    if not numfeatures:
+        continue
+    fl_dataset.feature_list = dct_cat_fl[350][i]
+    fl_dataset.generate_feature_vector(numfeatures, 4)
+    fil_fv = os.path.join(dir_results, '350', 'fv_350_' + psitype + '.csv')
+    fl_dataset.save_feature_vector(fil_fv)
 
-# Generate results for machine learning algorithms
-if var_ApplyMachineLearning:
-    print('Reading Feature Vector Dataset')
+    # Generate results for machine learning algorithms
+    if var_ApplyMachineLearning:
+        print('Reading Feature Vector Dataset')
 
-    # Read Dataset 1
-    dataset = read_dataset(fil_fv)
+        # Read Dataset 1
+        dataset = read_dataset(fil_fv)
 
-    # Initialize to 7 machine learning models defined in mclearn [LR, KNN, DT, NB, MNB, SVM, RF]
-    models = initialize_models()
+        # Initialize to 7 machine learning models defined in mclearn [LR, KNN, DT, NB, MNB, SVM, RF]
+        models = initialize_models()
 
-    # Intialize file names
-    json_ds1_cv_results = os.path.join(dir_results, '350', "func_cv_results.json")
-    png_ds1_cv_graph = os.path.join(dir_results, '350', "func_cv_graph.png")
+        # Intialize file names
+        json_ds1_cv_results = os.path.join(dir_results, '350', psitype + "_cv_results.json")
+        png_ds1_cv_graph = os.path.join(dir_results, '350', psitype + "_cv_graph.png")
 
-    # Cross Validation Results
-    print('running machine learning algorithms')
-    save_cv_results(dataset, models, 5, numfeatures+1, numfeatures-5, json_ds1_cv_results)
+        # Cross Validation Results
+        print('running machine learning algorithms')
+        save_cv_results(dataset, models, 5, numfeatures+1, numfeatures-5, json_ds1_cv_results)
 
-    # Plot Graph
-    plot_graph('Cross Validation Results for Dataset1', 'Number of Features', 'Accuracy', json_ds1_cv_results,
-               png_ds1_cv_graph)
+        # Plot Graph
+        plot_graph('Cross Validation Results for Dataset1', 'Number of Features', 'Accuracy', json_ds1_cv_results,
+                   png_ds1_cv_graph, varXaxis=numfeatures)
