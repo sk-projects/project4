@@ -8,7 +8,7 @@ import ast
 from mclearn import *
 
 # Initialize Directory and File Paths
-dir_dataset = "/home/cloud/Documents/dataset_paper/dataset1"
+dir_dataset = "/home/cloud/Documents/dataset_paper/dataset1cv"
 dir_results = os.path.join(os.getcwd(), "psicat_results")
 if not os.path.exists(dir_results):
     os.mkdir(dir_results)
@@ -38,7 +38,7 @@ if not os.path.exists(objfile_malware):
     print(malware_dir)
     fl_malware_dir = FileList(malware_dir)
     print(fl_malware_dir)
-    fl_malware_dir.set_Class(1)
+    fl_malware_dir.set_Class(0)
     fl_malware_dir.set_category('none')
     with open(objfile_malware, 'wb') as output:
         pickle.dump(fl_malware_dir, output, pickle.HIGHEST_PROTOCOL)
@@ -54,9 +54,9 @@ dct_cat_fl = ast.literal_eval(open(fil_cat_fl, 'r').read())
 if not os.path.exists(os.path.join(dir_results, '350')):
     os.mkdir(os.path.join(dir_results, '350'))
 
-
+numfeatures = len(dct_cat_fl[350][0])
 fl_dataset.feature_list = dct_cat_fl[350][0]
-fl_dataset.generate_feature_vector(len(dct_cat_fl[350][0]), 4)
+fl_dataset.generate_feature_vector(numfeatures, 4)
 fil_fv = os.path.join(dir_results, '350', 'fv_350_func.csv')
 fl_dataset.save_feature_vector(fil_fv)
 
@@ -76,7 +76,7 @@ if var_ApplyMachineLearning:
 
     # Cross Validation Results
     print('running machine learning algorithms')
-    save_cv_results(dataset, models, 50, 1000, 50, json_ds1_cv_results)
+    save_cv_results(dataset, models, 5, numfeatures+1, numfeatures-5, json_ds1_cv_results)
 
     # Plot Graph
     plot_graph('Cross Validation Results for Dataset1', 'Number of Features', 'Accuracy', json_ds1_cv_results,
