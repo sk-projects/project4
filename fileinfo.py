@@ -21,11 +21,12 @@ class SampleFile:
     word_list_func = []
     word_list_msg = []
 
-    def __init__(self,filename):
+    def __init__(self, filename):
         self.filename = filename
         self.calculate_sha256()
         self.psi_count = 0
         self.dct_freq_count = {}
+        self.psi_length_freq_count = {}
 
         # string category
         self.urls = []
@@ -53,8 +54,9 @@ class SampleFile:
         psi=result.stdout.splitlines()
 #        open(self.filename + '.txt','w').write('\n'.join(map(bytes.decode,psi)))
         self.psi_count = len(psi)
-        psistr=list(map(bytes.decode,psi))
+        psistr=list(map(bytes.decode, psi))
         self.psi_freq_count(psistr)
+        self.psi_length_count(psistr)
 
         # if self.word_list_func == []:
         #     self.generate_word_list_func()
@@ -70,7 +72,7 @@ class SampleFile:
         # self.write_count()
 
     
-    def psi_freq_count(self,psi):
+    def psi_freq_count(self, psi):
         self.dct_freq_count={}
         for string in psi:
             if string not in self.dct_freq_count.keys():
@@ -78,6 +80,16 @@ class SampleFile:
             else:
                 self.dct_freq_count[string] += 1
 #        open(self.filename + '.txt1','w').write(str(self.dct_freq_count))
+
+
+    def psi_length_count(self, psi):
+        """
+        Calculate the length of strings and then count the number of occurences of length
+        :param psi:
+        :return:
+        """
+        from collections import Counter
+        self.psi_length_freq_count = dict(Counter(list(map(lambda x: len(x), psi))))
 
 
     def generate_word_list_func(self):
@@ -366,6 +378,17 @@ class SampleFile:
     def __str__(self):
         return 'sha256: %s \nFileName: %s\nClass: %s' % (self.sha256, self.filename, self.Class)
 
+    # Histogram
+    def generate_histogram(self, mybins, histnames):
+        self.histogram = {}
+        for key in histnames:
+            self.histogram[key] = 0
+        for length, count in self.psi_length_freq_count.items():
+            if length >= mybins[0] and length < mybins[len(mybins)-1]:
+                for i in range(0, len(mybins)-1):
+                    if mybins[i] <= length < mybins[i+1]:
+                        self.histogram[histnames[i]] += count
+
 
 class FileList:
 
@@ -409,6 +432,7 @@ class FileList:
         newdir.Class = self.Class + other.Class
         return newdir
 
+
     def extract_strings_from_files(self,path):
         import os
         files = os.listdir(path)
@@ -424,6 +448,7 @@ class FileList:
                 print("processed %s " % (f.filename))
                 if counter % 200 == 0:
                     print("Processed %d files" % (counter))
+
 
     def generate_global_list(self):
         from operator import itemgetter
@@ -600,6 +625,52 @@ class FileList:
         for file in files:
             dct_psi[os.path.basename(file.filename)] = file.dct_freq_count
         open(output,'w').write(str(dct_psi))
+
+
+    # ---------------------------------------------------------
+    # histogram
+
+    def string_length_all(self):
+        """
+        calculate the the frequency of the length of the strings in each file in the directory
+
+        :return:
+        """
+        files = list(self.dct_fileinfo.values())
+        self.psi_all_string_count = {}
+        for file in files:
+            for length, count in file.psi_length_freq_count.items():
+                try:
+                    self.psi_all_string_count[length] = self.psi_all_string_count[length] + count
+                except KeyError:
+                    self.psi_all_string_count[length] = count
+        from operator import  itemgetter
+        self.psi_all_string_count = dict(sorted(self.psi_all_string_count.items(), key=itemgetter(0)))
+
+
+    def string_length_all_mean(self):
+        self.psi_all_string_count_mean = {}
+        for length, count in self.psi_all_string_count.items():
+            self.psi_all_string_count_mean[length] = count / self.total_files
+
+
+    def string_length_histogrambins(self, mybins):
+        l1=[]
+        for i in range(0, len(mybins) - 1):
+            sname = 'sl_' + str(mybins[i]) + '_' + str(mybins[i + 1])
+            l1.append(sname)
+        files = list(self.dct_fileinfo.values())
+        for file in files:
+            file.generate_histogram(mybins, histnames=l1)
+
+    def string_length_hist_featurevector(self, filename):
+        files = list(self.dct_fileinfo.values())
+        self.histogram_fv = []
+        content = ''
+        for file in files:
+            content = content + ','.join(list(map(str, list(file.histogram.values()) + [file.Class]))) + '\n'
+        open(filename, 'w').write(content)
+
 
 
 if __name__ == "__main__":
