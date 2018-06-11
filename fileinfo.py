@@ -18,15 +18,24 @@ import os
 
 class SampleFile:
 
+    word_list_func = []
+    word_list_msg = []
+
     def __init__(self,filename):
         self.filename = filename
         self.calculate_sha256()
         self.psi_count = 0
         self.dct_freq_count = {}
+
+        # string category
         self.urls = []
         self.dlls = []
-        self.other_files = {}
+        self.other_files = {} # is a dictionary with key as extension and values as list of files with that extension
         self.func_names = []
+        self.messages = []
+        self.symbolic = []
+        self.other_files_list = []
+        self.symbolic_count = 0
 
     
     def calculate_sha256(self):
@@ -46,9 +55,20 @@ class SampleFile:
         self.psi_count = len(psi)
         psistr=list(map(bytes.decode,psi))
         self.psi_freq_count(psistr)
-        self.find_urls()
-        self.find_dll_files()
-        self.find_other_files()
+
+        # if self.word_list_func == []:
+        #     self.generate_word_list_func()
+        # if self.word_list_msg == []:
+        #     self.generate_word_list_msg()
+        # self.find_urls()
+        # self.find_dll_files()
+        # self.find_other_files()
+        # self.find_api_calls(word_list1=self.word_list_func)
+        # #self.find_messages()
+        # #self.find_symbolic()
+        # self.find_messages_symbolic(word_list1=self.word_list_msg)
+        # self.write_count()
+
     
     def psi_freq_count(self,psi):
         self.dct_freq_count={}
@@ -58,6 +78,38 @@ class SampleFile:
             else:
                 self.dct_freq_count[string] += 1
 #        open(self.filename + '.txt1','w').write(str(self.dct_freq_count))
+
+
+    def generate_word_list_func(self):
+        if self.word_list_func == []:
+            from nltk.corpus import words
+            word_list = words.words()
+            word_list1 = [x for x in word_list if 9 > len(x) > 2]
+            word_list1 = sorted(word_list1, key=len)
+            self.word_list_func = word_list1
+
+
+    def generate_word_list_msg(self):
+        if self.word_list_msg == []:
+            from nltk.corpus import words
+            word_list = words.words()
+            word_list1 = [x for x in word_list if len(x) > 3]
+            word_list1 = sorted(word_list1, key=len)
+            self.word_list_msg = word_list1
+
+    def categorize_strings(self):
+        if self.word_list_func == []:
+            self.generate_word_list_func()
+        if self.word_list_msg == []:
+            self.generate_word_list_msg()
+
+        self.find_urls()
+        self.find_dll_files()
+        self.find_other_files()
+        self.find_api_calls(word_list1=self.word_list_func)
+        self.find_messages()
+        self.find_symbolic()
+
 
     def find_urls(self):
         if self.urls != []:
@@ -69,7 +121,7 @@ class SampleFile:
         import re
         pattern = re.compile(r'(?:(?:http|HTTP|https|HTTPS|ftp|FTP|smtp|SMTP|irc|IRC)?:\/\/)?[\w-]{2,}\.[\w-]{2,}\.[\w-]{2,6}[\/\w.-]*\??[\w.=\-]*')
         for string in strlst:
-            if len(string) > 1000 or len(string) < 5:
+            if len(string) > 100 or len(string) < 5:
                 continue
            # print(string)
             matches = pattern.findall(string)
@@ -77,7 +129,6 @@ class SampleFile:
                 if(len(match) > 2):
                     self.urls.append(match)
                    # print(self.urls)
-
 
     def print_urls(self):
         print(self.urls)
@@ -89,7 +140,7 @@ class SampleFile:
         import re
         pattern = re.compile(r'[a-zA-Z0-9-]+\.dll')
         for string in strlst:
-            if len(string) > 1000 or len(string) < 5:
+            if len(string) > 15 or len(string) < 5:
                 continue
           #  print(string)
             for match in pattern.findall(string):
@@ -101,18 +152,21 @@ class SampleFile:
         print(self.dlls)
 
     def find_other_files(self):
+        # is a dictionary with key as extension and values as list of files with that extension
         self.other_files = {}
+        self.other_files_list = []
         strlst = list(self.dct_freq_count.keys())
         import re
         pattern = re.compile('([^:#&<>?|~%]+\.(exe|vbs|msi|jpg|pdf|cfg))$', re.IGNORECASE)
         for string in strlst:
-            if len(string) > 1000 or len(string) < 2:
+            if len(string) > 50 or len(string) < 2:
                 continue
             for match in pattern.findall(string):
                 try:
                     self.other_files[str(match[1]).lower()].append(match[0])
                 except KeyError:
                     self.other_files[str(match[1]).lower()] = [match[0]]
+                self.other_files_list.append(match[0])
 
             #print(self.other_files)
 
@@ -121,13 +175,13 @@ class SampleFile:
         print(self.other_files)
 
 
-    def find_api_calls(self):
+    def find_api_calls(self, word_list1=None):
         self.func_names = []
         strlst = list(self.dct_freq_count.keys())
         import re
         pattern = re.compile(r'^([A-Z]([a-z]+[A-Z]*){,6}(32|64)?)')
         for string in strlst:
-            if(len(string) > 100):
+            if(len(string) > 30):
                 continue
             matches = pattern.fullmatch(string)
             if matches:
@@ -145,8 +199,147 @@ class SampleFile:
         for x in self.func_names:
             if len(x) < 6:
                 sfunc.append(x)
-        print(self.func_names)
 
+        small_func = ['sleep','exit','_exit','sqrt']
+        msgstrings = [sm for sm in sfunc if sm.lower() not in small_func]
+        fnf = list(set(self.func_names) - set(msgstrings))
+        self.func_names = fnf
+
+        if not word_list1:
+            from nltk.corpus import words
+            word_list = words.words()
+            word_list1 = [x for x in word_list if 9 > len(x) > 2]
+            word_list1 = sorted(word_list1, key=len)
+
+        func_strings = []
+        for string in self.func_names:
+            for word in word_list1:
+                if string.lower().find(word.lower()) != -1:
+                    func_strings.append(string)
+                    break
+        self.func_names = func_strings
+
+        #print(self.func_names)
+
+#----------------------------------------------------------------------------------------------------------------
+    def find_messages(self, word_list1=None):
+
+        strlst = list(self.dct_freq_count.keys())
+        strings = strlst
+
+        if self.dlls == []:
+            self.find_dll_files()
+        if self.func_names == []:
+            self.find_api_calls()
+        if self.other_files_list == []:
+            self.find_other_files()
+        if self.urls == []:
+            self.find_urls()
+        strings = [string for string in strings if string not in self.dlls]
+        strings = [string for string in strings if string not in self.func_names]
+        strings = [string for string in strings if string not in self.other_files_list]
+        strings = [string for string in strings if string not in self.urls]
+        #print(len(strings))
+
+        if not word_list1:
+            from nltk.corpus import words
+            word_list = words.words()
+            word_list1 = [x for x in word_list if len(x) > 3]
+            word_list1 = sorted(word_list1, key=len)
+
+        msg_strings = []
+        for string in strings:
+            for word in word_list1:
+                if string.lower().find(word.lower()) != -1:
+                    msg_strings.append(string)
+                    break
+
+        self.messages = msg_strings
+
+
+    def find_symbolic(self):
+
+        strlst = list(self.dct_freq_count.keys())
+        strings = strlst
+
+        if self.dlls == []:
+            self.find_dll_files()
+        if self.func_names == []:
+            self.find_api_calls()
+        if self.other_files_list == []:
+            self.find_other_files()
+        if self.urls == []:
+            self.find_urls()
+        if self.messages == []:
+            self.find_messages()
+
+        msgstrings = self.messages
+        strings = [string for string in strings if string not in self.dlls]
+        strings = [string for string in strings if string not in self.func_names]
+        strings = [string for string in strings if string not in self.other_files_list]
+        strings = [string for string in strings if string not in self.urls]
+
+        symstrings = [string for string in list(map(lambda x:x.lower(), strings)) if string not in list(map(lambda x:x.lower(), msgstrings))]
+
+        self.symbolic = symstrings
+        return symstrings
+
+
+    def find_messages_symbolic(self,word_list1=None):
+        strlst = list(self.dct_freq_count.keys())
+        strings = strlst
+
+        if self.dlls == []:
+            self.find_dll_files()
+        if self.func_names == []:
+            self.find_api_calls()
+        if self.other_files_list == []:
+            self.find_other_files()
+        if self.urls == []:
+            self.find_urls()
+
+        #strings = [string for string in strings if string not in self.dlls]
+        #strings = [string for string in strings if string not in self.func_names]
+        #strings = [string for string in strings if string not in self.other_files_list]
+        #strings = [string for string in strings if string not in self.urls]
+
+        strings = list(set(strings) - set(self.dlls) - set(self.func_names) - set(self.other_files_list) - set(self.urls))
+
+        #print(len(strings))
+
+        if not word_list1:
+            from nltk.corpus import words
+            word_list = words.words()
+            word_list1 = [x for x in word_list if len(x) > 3]
+            word_list1 = sorted(word_list1, key=len)
+
+        msg_strings = []
+        for string in strings:
+            for word in word_list1:
+                if string.lower().find(word.lower()) != -1:
+                    msg_strings.append(string)
+                    break
+
+        self.messages = msg_strings
+
+        #symstrings = [string for string in list(map(lambda x:x.lower(), strings)) if string not in list(map(lambda x:x.lower(), msg_strings))]
+
+        #self.symbolic = symstrings
+        self.symbolic_count = len(strings) - len(self.messages)
+
+        #return symstrings
+
+    def write_count(self):
+        content = os.path.basename(self.filename) + " : " + "func = " + str(len(self.func_names)) + "|"
+        content = content + " dlls = " + str(len(self.dlls)) + "|"
+        content += " urls = " + str(len(self.urls)) + "|"
+        content += " other files = " + str(len(self.other_files_list)) + "|"
+        content += " message = " + str(len(self.messages)) + "|"
+        content += " symbolic = " + str(self.symbolic_count) + "\n"
+
+        open("psi_count_worm.txt","a").write(content)
+
+#-----------------------------------------------------------------------------------------------------------------------
 
     def set_Class(self, Class):
         self.Class = Class
@@ -401,6 +594,12 @@ class FileList:
         print('Total Files = %d' % (len(self.dll_feature_vector)))
         open(fil_dll_feature_vector,'w').write(content)
 
+    def write_psi_freq_count(self, output):
+        files = list(self.dct_fileinfo.values())
+        dct_psi = {}
+        for file in files:
+            dct_psi[os.path.basename(file.filename)] = file.dct_freq_count
+        open(output,'w').write(str(dct_psi))
 
 
 if __name__ == "__main__":

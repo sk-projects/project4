@@ -16,7 +16,7 @@ objfile_benign = os.path.join(dir_results, 'db_benign.pkl')
 objfile_malware = os.path.join(dir_results, 'db_malware.pkl')
 objfile_dataset = os.path.join(dir_results, 'db_dataset.pkl')
 var_ApplyMachineLearning = True
-totalfeatures = 900
+totalfeatures = 800
 
 # Read the directories containing sample executable files
 if not os.path.exists(objfile_benign):
@@ -54,7 +54,7 @@ dct_cat_fl = ast.literal_eval(open(fil_cat_fl, 'r').read())
 if not os.path.exists(os.path.join(dir_results, str(totalfeatures))):
     os.mkdir(os.path.join(dir_results, str(totalfeatures)))
 
-psicatnames = ['func', 'dlls', 'urls', 'files', 'message', 'symbolic']
+psicatnames = ['dlls', 'urls', 'files', 'func','message', 'symbolic']
 for i in range(0, len(psicatnames)):
     psitype = psicatnames[i]
     numfeatures = len(dct_cat_fl[totalfeatures][i])
@@ -73,7 +73,8 @@ for i in range(0, len(psicatnames)):
         dataset = read_dataset(fil_fv)
 
         # Initialize to 7 machine learning models defined in mclearn [LR, KNN, DT, NB, MNB, SVM, RF]
-        models = initialize_models()
+        #models = initialize_models()
+        models = initialize_models_best()
 
         # Intialize file names
         json_ds1_cv_results = os.path.join(dir_results, str(totalfeatures), psitype + "_cv_results.json")
@@ -81,8 +82,7 @@ for i in range(0, len(psicatnames)):
 
         # Cross Validation Results
         print('running machine learning algorithms')
-        save_cv_results(dataset, models, 5, numfeatures+1, numfeatures-5, json_ds1_cv_results)
+        save_cv_results(dataset, models, 2, numfeatures+1, numfeatures-2, json_ds1_cv_results)
 
         # Plot Graph
-        plot_graph('Cross Validation Results for Dataset1', 'Number of Features', 'Accuracy', json_ds1_cv_results,
-                   png_ds1_cv_graph, varXaxis=numfeatures)
+        #plot_graph('Cross Validation Results for Dataset1', 'Number of Features', 'Accuracy', json_ds1_cv_results, png_ds1_cv_graph, varXaxis=numfeatures)

@@ -63,14 +63,16 @@ def save_cv_results(dataset, models, start_feature, end_feature, step_feature, o
 def test_model(model, X_train, Y_train, X_test, Y_test):
     model.fit(X_train, Y_train)
     predictions = model.predict(X_test)
-    # print(accuracy_score(Y_test, predictions) * 100)
+    print(accuracy_score(Y_test, predictions) * 100)
     # print(confusion_matrix(Y_test, predictions))
     # print(pandas.crosstab(Y_test, predictions, rownames=['True'], colnames=['Predicted'], margins=True))
-    # print(classification_report(Y_test, predictions))
-    # print(predictions)
-    # print(Y_test)
-    # print(X_test)
+    print(classification_report(Y_test, predictions))
+    print(predictions)
+    print(Y_test)
+    print(X_test)
     tn, fp, fn, tp = confusion_matrix(Y_test, predictions).ravel()
+    val = "tn" + str(tn) + "\nfp" + str(fp) + "\nfn" + str(fn) + "\ntp" + str(tp)
+    print(val)
     tpr = round( tp / (tp + fn)*100, 2)
     tnr = round( tn / (tn + fp)*100, 2)
     fpr = round( fp / (fp + tn)*100, 2)
@@ -221,6 +223,12 @@ def initialize_models():
     models.append(('RF', RandomForestClassifier(n_estimators=100)))
     return models
 
+def initialize_models_best():
+    models = []
+    models.append(('LR', LogisticRegression()))
+    models.append(('DT', DecisionTreeClassifier()))
+    models.append(('RF', RandomForestClassifier(n_estimators=100)))
+    return models
 
 
 if __name__ == "__main__":
