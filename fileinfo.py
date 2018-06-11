@@ -14,7 +14,7 @@ from typing import Dict, Any, List
 
 import numpy as np
 import os
-
+from pe_file_extractor import *
 
 class SampleFile:
 
@@ -395,7 +395,6 @@ class SampleFile:
     # -----------------------------------------------------
     # PE Header Features
     def extract_pe_header_features(self):
-        from pe_file_extractor import *
         try:
             pe = pefile.PE(self.filename)
         except Exception as e:
@@ -691,13 +690,13 @@ class FileList:
 
     # PE Header Features
     def extract_pe_header_features(self, output_file):
-        from pe_file_extractor import *
+        #from pe_file_extractor import *
         import csv
-        f = open(output_file, 'w+')
+        f = open(output_file, 'a')
         writer = csv.writer(f)
         #writer.writerow(IMAGE_DOS_HEADER + FILE_HEADER + OPTIONAL_HEADER + ['class'])
         files = list(self.dct_fileinfo.values())
-        class_label = int(self.Class)
+        class_label = [int(self.Class[0])] # binary class
         for file in files:
             input_file = file.filename
             try:
