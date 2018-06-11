@@ -38,6 +38,8 @@ class SampleFile:
         self.other_files_list = []
         self.symbolic_count = 0
 
+        # pe header
+        self.pe_header_features = []
     
     def calculate_sha256(self):
         BLOCKSIZE = 65536
@@ -390,6 +392,21 @@ class SampleFile:
                         self.histogram[histnames[i]] += count
 
 
+    # -----------------------------------------------------
+    # PE Header Features
+    def extract_pe_header_features(self):
+        from pe_file_extractor import *
+        try:
+            pe = pefile.PE(self.filename)
+        except Exception as e:
+            print("Exception while loading file: ", e)
+        else:
+            if hex(pe.PE_TYPE) == '0x20b':
+                self.pe_header_features = extract_features(pe, '64bit')
+            else:
+                self.pe_header_features = extract_features(pe, '32bit')
+
+
 class FileList:
 
     alldir_list = []
@@ -672,6 +689,32 @@ class FileList:
         open(filename, 'w').write(content)
 
 
+    # PE Header Features
+    def extract_pe_header_features(self, output_file):
+        from pe_file_extractor import *
+        import csv
+        f = open(output_file, 'w+')
+        writer = csv.writer(f)
+        #writer.writerow(IMAGE_DOS_HEADER + FILE_HEADER + OPTIONAL_HEADER + ['class'])
+        files = list(self.dct_fileinfo.values())
+        class_label = int(self.Class)
+        for file in files:
+            input_file = file.filename
+            try:
+                pe = pefile.PE(input_file)
+            except Exception as e:
+                print("Exception while loading file: ", e)
+            else:
+                try:
+                    if hex(pe.PE_TYPE) == '0x20b':
+                        features = extract_features(pe, '64bit')
+                    else:
+                        features = extract_features(pe, '32bit')
+                    writer.writerow(features + class_label)
+                except Exception as e:
+                    print("Exception while opening and writing CSV file: ", e)
+
+        f.close()
 
 if __name__ == "__main__":
     print("fileinfo.py is being run directly")
